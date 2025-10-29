@@ -23,6 +23,7 @@ It uses **Flask** as the backend and **React** as the frontend, integrating **Me
 ---
 
 ## 📁 Project Structure
+```bash
 VaaniConnect2/
 ├── backend/
 │ ├── app.py
@@ -34,7 +35,7 @@ VaaniConnect2/
 │ └── package.json
 └── README.md
 
----
+```
 
 ## ⚙️ Setup Instructions
 
