@@ -42,6 +42,7 @@ VaaniConnect2/
 ```bash
 git clone https://github.com/vrishitha47/VaaniConnect2.git
 cd VaaniConnect2
+```
 ### 2️⃣ Backend Setup
 cd backend
 python -m venv venv
