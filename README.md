@@ -61,9 +61,9 @@ npm start
 ```
 
 ###🧪 Test the API
-```bash
-Once Flask is running at http://127.0.0.1:5000, open PowerShell and run:
 
+Once Flask is running at http://127.0.0.1:5000, open PowerShell and run:
+```bash
 Invoke-RestMethod -Uri "http://127.0.0.1:5000/translate" -Method POST -Headers @{"Content-Type"="application/json"} -Body '{"text": "Hello, how are you?", "target_lang": "spa"}'
 ```
 
