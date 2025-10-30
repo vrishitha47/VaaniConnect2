@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+// text to text
 const TextTranslate = () => {
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
