@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify,send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 from transformers import AutoProcessor, SeamlessM4TModel
 import torch
 import io
@@ -6,6 +6,7 @@ from flask_cors import CORS
 from pydub import AudioSegment
 import soundfile as sf
 import os
+import numpy as np
 
 # Set ffmpeg path
 AudioSegment.converter = "D:\\ffmpeg-8.0-essentials_build\\bin\\ffmpeg.exe"
@@ -85,37 +86,112 @@ def text_to_speech():
     text = data.get("text")
     target_lang = data.get("target_lang")
 
+    print(f"Received request - Text: {text}, Target Language: {target_lang}")
+
     if not text or not target_lang:
         return jsonify({"error": "Missing 'text' or 'target_lang'"}), 400
 
     try:
+        print("Starting text-to-speech generation...")
         inputs = processor(text=text, src_lang="eng", return_tensors="pt")
 
         with torch.no_grad():
             output = model.generate(**inputs, tgt_lang=target_lang, generate_speech=True)
 
-        # Handle tuple or object output
-        if isinstance(output, tuple):
-            audio_waveform, sample_rate = output
-        else:
-            audio_waveform = output.waveform[0].cpu().numpy()
+        print(f"Model output type: {type(output)}")
+        
+        # Handle the output
+        if hasattr(output, 'waveform'):
+            audio_waveform = output.waveform[0].cpu().numpy()  # Convert tensor to numpy immediately
             sample_rate = output.sampling_rate
+            print(f"Using waveform from output object, shape: {audio_waveform.shape}")
+        elif isinstance(output, tuple) and len(output) == 2:
+            audio_waveform, sample_rate = output
+            if isinstance(audio_waveform, torch.Tensor):
+                audio_waveform = audio_waveform.cpu().numpy()
+            print(f"Using tuple output, shape: {audio_waveform.shape}")
+        else:
+            raise ValueError(f"Unexpected output format from model.generate(): {type(output)}")
 
-        # Convert to numpy if not already
-        if not isinstance(audio_waveform, torch.Tensor):
-            import numpy as np
-            audio_waveform = np.array(audio_waveform)
-
+        # Normalize the audio data
+        if isinstance(audio_waveform, torch.Tensor):
+            audio_waveform = audio_waveform.cpu().numpy()
+        
+        # Ensure the audio data is in the correct format (float32 between -1 and 1)
+        if audio_waveform.dtype != np.float32:
+            audio_waveform = audio_waveform.astype(np.float32)
+        
+        # Normalize if needed
+        if audio_waveform.max() > 1.0 or audio_waveform.min() < -1.0:
+            audio_waveform = audio_waveform / max(abs(audio_waveform.max()), abs(audio_waveform.min()))
+        
         # Save the WAV file
-        audio_path = "output.wav"
-        sf.write(audio_path, audio_waveform, sample_rate)
-
-        return jsonify({"message": "Speech generated", "audio_file": "output.wav"})
+        audio_path = os.path.join(os.getcwd(), "output.wav")
+        print(f"Saving audio to: {audio_path}")
+        
+        # Ensure we have a 1D array
+        if len(audio_waveform.shape) > 1:
+            audio_waveform = audio_waveform.squeeze()
+        
+        print(f"Final audio shape: {audio_waveform.shape}, Sample rate: {sample_rate}")
+        print(f"Audio min: {audio_waveform.min()}, max: {audio_waveform.max()}")
+        
+        try:
+            # Convert to float32 and ensure correct range
+            audio_waveform = audio_waveform.astype(np.float32)
+            
+            # Save with explicit format
+            sf.write(
+                file=audio_path,
+                data=audio_waveform,
+                samplerate=sample_rate,
+                format='WAV',
+                subtype='FLOAT'
+            )
+            print("Audio file saved successfully")
+            
+            # Verify the file was created and is readable
+            if os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
+                # Try reading it back to verify it's valid
+                test_read = sf.read(audio_path)
+                print("Audio file verified - can be read back successfully")
+                return jsonify({"message": "Speech generated", "audio_file": "output.wav"})
+            else:
+                raise Exception("Audio file was not created properly")
+                
+        except Exception as write_error:
+            print(f"Error saving audio: {str(write_error)}")
+            return jsonify({"error": f"Error saving audio: {str(write_error)}"}), 500
+            
     except Exception as e:
+        print(f"Error in text-to-speech: {str(e)}")
         return jsonify({"error": str(e)}), 500
 @app.route('/output.wav')
 def serve_audio():
-    return send_from_directory(os.getcwd(), 'output.wav')
+    try:
+        audio_path = os.path.join(os.getcwd(), 'output.wav')
+        if not os.path.exists(audio_path):
+            return jsonify({"error": "Audio file not found"}), 404
+            
+        # Verify the file is readable
+        try:
+            # Try to read the file back to verify
+            test_data, test_rate = sf.read(audio_path)
+            print(f"Verification - Audio shape: {test_data.shape}, Sample rate: {test_rate}")
+        except Exception as e:
+            print(f"Error verifying audio file: {str(e)}")
+            return jsonify({"error": f"Invalid audio file: {str(e)}"}), 500
+            
+        return send_from_directory(
+            os.getcwd(),
+            'output.wav',
+            mimetype='audio/wav',
+            as_attachment=False,
+            max_age=0  # Prevent caching
+        )
+    except Exception as e:
+        print(f"Error serving audio: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=False)
