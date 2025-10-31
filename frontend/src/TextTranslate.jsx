@@ -1,5 +1,46 @@
 import React, { useState } from "react";
-// text to text
+
+// Languages supported by SeamlessM4T for all translation modes - 36 languages
+// Note: model.generate() validates against these languages even for text-only translation
+const languages = [
+  { code: 'arb', name: 'Arabic' },
+  { code: 'ben', name: 'Bengali' },
+  { code: 'cat', name: 'Catalan' },
+  { code: 'ces', name: 'Czech' },
+  { code: 'cmn', name: 'Chinese (Mandarin)' },
+  { code: 'cym', name: 'Welsh' },
+  { code: 'dan', name: 'Danish' },
+  { code: 'deu', name: 'German' },
+  { code: 'eng', name: 'English' },
+  { code: 'est', name: 'Estonian' },
+  { code: 'fin', name: 'Finnish' },
+  { code: 'fra', name: 'French' },
+  { code: 'hin', name: 'Hindi' },
+  { code: 'ind', name: 'Indonesian' },
+  { code: 'ita', name: 'Italian' },
+  { code: 'jpn', name: 'Japanese' },
+  { code: 'kor', name: 'Korean' },
+  { code: 'mlt', name: 'Maltese' },
+  { code: 'nld', name: 'Dutch' },
+  { code: 'pes', name: 'Persian (Farsi)' },
+  { code: 'pol', name: 'Polish' },
+  { code: 'por', name: 'Portuguese' },
+  { code: 'ron', name: 'Romanian' },
+  { code: 'rus', name: 'Russian' },
+  { code: 'slk', name: 'Slovak' },
+  { code: 'spa', name: 'Spanish' },
+  { code: 'swe', name: 'Swedish' },
+  { code: 'swh', name: 'Swahili' },
+  { code: 'tel', name: 'Telugu' },
+  { code: 'tgl', name: 'Tagalog (Filipino)' },
+  { code: 'tha', name: 'Thai' },
+  { code: 'tur', name: 'Turkish' },
+  { code: 'ukr', name: 'Ukrainian' },
+  { code: 'urd', name: 'Urdu' },
+  { code: 'uzn', name: 'Uzbek (Northern)' },
+  { code: 'vie', name: 'Vietnamese' }
+];
+
 const TextTranslate = () => {
   const [text, setText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
@@ -31,60 +72,127 @@ const TextTranslate = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-      <h1 className="text-3xl font-bold mb-6">🌍 Text Translator</h1>
+    <section style={styles.section}>
+      <h2 style={styles.title}>Text to Text Translation</h2>
+      <p style={styles.description}>Translate text between languages</p>
 
-      <div className="flex gap-4 mb-4">
-        <select
-          value={srcLang}
-          onChange={(e) => setSrcLang(e.target.value)}
-          className="bg-gray-800 text-white px-4 py-2 rounded-lg"
-        >
-          <option value="eng">English</option>
-          <option value="hin">Hindi</option>
-          <option value="tel">Telugu</option>
-          <option value="tam">Tamil</option>
-          <option value="fra">French</option>
-          <option value="spa">Spanish</option>
-        </select>
+      <div style={styles.languageRow}>
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Source Language</label>
+          <select value={srcLang} onChange={(e) => setSrcLang(e.target.value)}>
+            {languages.map(lang => (
+              <option key={lang.code} value={lang.code}>{lang.name}</option>
+            ))}
+          </select>
+        </div>
 
-        <select
-          value={tgtLang}
-          onChange={(e) => setTgtLang(e.target.value)}
-          className="bg-gray-800 text-white px-4 py-2 rounded-lg"
-        >
-          <option value="eng">English</option>
-          <option value="hin">Hindi</option>
-          <option value="tel">Telugu</option>
-          <option value="tam">Tamil</option>
-          <option value="fra">French</option>
-          <option value="spa">Spanish</option>
-        </select>
+        <div style={styles.arrow}>→</div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Target Language</label>
+          <select value={tgtLang} onChange={(e) => setTgtLang(e.target.value)}>
+            {languages.map(lang => (
+              <option key={lang.code} value={lang.code}>{lang.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <textarea
-        placeholder="Enter your text here..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        className="w-80 h-32 bg-gray-800 text-white rounded-lg p-3 mb-4"
-      ></textarea>
+      <div style={styles.inputGroup}>
+        <label style={styles.label}>Enter Text</label>
+        <textarea
+          placeholder="Type your text here..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          style={styles.textarea}
+        />
+      </div>
 
-      <button
-        onClick={handleTranslate}
-        disabled={loading}
-        className="px-6 py-3 bg-blue-600 rounded-lg hover:bg-blue-700 font-semibold"
-      >
+      <button onClick={handleTranslate} disabled={loading}>
         {loading ? "Translating..." : "Translate"}
       </button>
 
       {translatedText && (
-        <div className="mt-6 bg-gray-800 p-4 rounded-lg w-80">
-          <h2 className="text-xl font-semibold mb-2">🔤 Translation:</h2>
-          <p>{translatedText}</p>
+        <div style={styles.result}>
+          <h3 style={styles.resultTitle}>Translation</h3>
+          <p style={styles.resultText}>{translatedText}</p>
         </div>
       )}
-    </div>
+    </section>
   );
+};
+
+const styles = {
+  section: {
+    backgroundColor: '#fff',
+    border: '1px solid #d0d0d0',
+    borderRadius: '8px',
+    padding: '1.5rem',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  title: {
+    fontSize: '1.25rem',
+    fontWeight: '600',
+    marginBottom: '0.4rem',
+    color: '#2c3e50'
+  },
+  description: {
+    fontSize: '0.85rem',
+    color: '#7f8c8d',
+    marginBottom: '1.2rem'
+  },
+  languageRow: {
+    display: 'flex',
+    gap: '0.8rem',
+    alignItems: 'flex-end',
+    marginBottom: '1.2rem'
+  },
+  inputGroup: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem'
+  },
+  label: {
+    fontSize: '0.8rem',
+    fontWeight: '500',
+    color: '#2c3e50'
+  },
+  arrow: {
+    fontSize: '1.3rem',
+    color: '#7f8c8d',
+    marginBottom: '0.3rem'
+  },
+  textarea: {
+    width: '100%',
+    height: '100px',
+    padding: '0.6rem',
+    fontSize: '0.9rem',
+    border: '1px solid #d0d0d0',
+    borderRadius: '4px',
+    resize: 'vertical',
+    fontFamily: 'inherit'
+  },
+  result: {
+    marginTop: '1.2rem',
+    padding: '0.9rem',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '4px',
+    border: '1px solid #e0e0e0'
+  },
+  resultTitle: {
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: '0.5rem'
+  },
+  resultText: {
+    fontSize: '0.9rem',
+    color: '#2c3e50',
+    lineHeight: '1.5'
+  }
 };
 
 export default TextTranslate;
