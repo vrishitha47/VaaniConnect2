@@ -30,8 +30,19 @@ AUDIO_OUTPUT_DIR.mkdir(exist_ok=True)
 print("Loading model... this may take a few minutes ⏳")
 model_id = "facebook/hf-seamless-m4t-medium"
 processor = AutoProcessor.from_pretrained(model_id)
-model = SeamlessM4TModel.from_pretrained(model_id)
-print("✅ Model loaded successfully!")
+
+# Optimization: Load in float16 to save memory (Render free tier is VERY tight)
+try:
+    model = SeamlessM4TModel.from_pretrained(
+        model_id, 
+        torch_dtype=torch.float16,
+        low_cpu_mem_usage=True
+    )
+    print("✅ Model loaded successfully in float16!")
+except Exception as e:
+    print(f"⚠️ float16 load failed, falling back to default: {e}")
+    model = SeamlessM4TModel.from_pretrained(model_id)
+    print("✅ Model loaded successfully (default precision)!")
 
 
 def convert_audio_to_wav(audio_bytes):
