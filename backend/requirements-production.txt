@@ -6,3 +6,6 @@ soundfile==0.12.1
 numpy==1.26.4
 audioread==3.0.1
 gunicorn==23.0.0
+tiktoken
+protobuf
+sentencepiece
