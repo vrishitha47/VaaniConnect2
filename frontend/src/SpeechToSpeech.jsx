@@ -1,4 +1,5 @@
 ﻿import React, { useState, useRef } from 'react';
+import { API_URL } from './config.js';
 
 // Languages supported for SPEECH synthesis (S2S output) - 36 languages total
 // Based on SeamlessM4T model's speech synthesis capabilities
@@ -169,7 +170,7 @@ const languages = [
 
             console.log('Sending speech-to-speech request:', { src_lang: srcLang, target_lang: targetLang });
 
-            const res = await fetch('http://127.0.0.1:5000/speech-to-speech', {
+            const res = await fetch(`${API_URL}/speech-to-speech`, {
                 method: 'POST',
                 body: formData,
             });
@@ -196,7 +197,7 @@ const languages = [
 
                 // Add timestamp to prevent browser caching
                 const url = data.audio_file
-                    ? `http://127.0.0.1:5000/output.wav?t=${Date.now()}`
+                    ? `${API_URL}/output.wav?t=${Date.now()}`
                     : `${data.audio_url}?t=${Date.now()}`; // Fallback for old format
                 setOutputAudio(url);
             } else {

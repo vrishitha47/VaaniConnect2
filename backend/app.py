@@ -12,7 +12,16 @@ import uuid
 from pathlib import Path
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS for production
+cors_origins = os.getenv('CORS_ORIGINS', '*')
+if cors_origins != '*':
+    # Split multiple origins by comma if provided
+    origins_list = [origin.strip() for origin in cors_origins.split(',')]
+    CORS(app, resources={r"/*": {"origins": origins_list}})
+else:
+    # Allow all origins in development
+    CORS(app)
 
 # Create audio outputs directory
 AUDIO_OUTPUT_DIR = Path(os.getcwd()) / "audio_outputs"
@@ -445,4 +454,7 @@ def serve_audio(filename):
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    # Get port from environment variable (Render provides this)
+    port = int(os.getenv("PORT", 5000))
+    # Bind to 0.0.0.0 for production deployment
+    app.run(host="0.0.0.0", port=port, debug=False)

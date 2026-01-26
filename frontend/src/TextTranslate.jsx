@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_URL } from './config.js';
 
 // Languages supported by SeamlessM4T for all translation modes - 36 languages
 // Note: model.generate() validates against these languages even for text-only translation
@@ -56,7 +57,7 @@ const TextTranslate = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:5000/translate", {
+      const res = await fetch(`${API_URL}/translate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, src_lang: srcLang, target_lang: tgtLang }),
